@@ -23,3 +23,8 @@ variable "redis_node_type" {
   type        = string
   default     = "cache.t3.micro"
 }
+
+variable "alb_dns_name" {
+  description = "DNS name of the ALB — added as CloudFront origin so API calls go over HTTPS"
+  type        = string
+}

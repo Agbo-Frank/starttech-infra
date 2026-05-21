@@ -52,12 +52,54 @@ resource "aws_cloudfront_distribution" "frontend" {
   price_class         = "PriceClass_100"
   comment             = "${var.title} frontend SPA"
 
+  # Origin 1: S3 bucket for React frontend
   origin {
     domain_name              = aws_s3_bucket.frontend.bucket_regional_domain_name
     origin_id                = "S3-${aws_s3_bucket.frontend.id}"
     origin_access_control_id = aws_cloudfront_origin_access_control.frontend.id
   }
 
+  # Origin 2: ALB for Go API — CloudFront→ALB is HTTP internally, browser→CF is HTTPS
+  origin {
+    domain_name = var.alb_dns_name
+    origin_id   = "ALB-backend"
+
+    custom_origin_config {
+      http_port              = 80
+      https_port             = 443
+      origin_protocol_policy = "http-only"
+      origin_ssl_protocols   = ["TLSv1.2"]
+    }
+  }
+
+  # API behaviors — ordered before the default S3 behavior
+  dynamic "ordered_cache_behavior" {
+    for_each = ["/auth/*", "/users/*", "/todos/*", "/ping*", "/swagger/*"]
+    content {
+      path_pattern     = ordered_cache_behavior.value
+      target_origin_id = "ALB-backend"
+
+      allowed_methods = ["DELETE", "GET", "HEAD", "OPTIONS", "PATCH", "POST", "PUT"]
+      cached_methods  = ["GET", "HEAD"]
+
+      viewer_protocol_policy = "redirect-to-https"
+
+      forwarded_values {
+        query_string = true
+        headers      = ["Authorization", "Content-Type", "Origin", "Access-Control-Request-Headers", "Access-Control-Request-Method"]
+        cookies {
+          forward = "all"
+        }
+      }
+
+      # No caching for API responses
+      min_ttl     = 0
+      default_ttl = 0
+      max_ttl     = 0
+    }
+  }
+
+  # Default behavior: serve React SPA from S3
   default_cache_behavior {
     allowed_methods        = ["GET", "HEAD", "OPTIONS"]
     cached_methods         = ["GET", "HEAD"]
