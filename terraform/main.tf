@@ -27,6 +27,27 @@ module "networking" {
   region = var.region
 }
 
+module "compute" {
+  source = "./modules/compute"
+
+  title                = var.title
+  region               = var.region
+  vpc_id               = module.networking.vpc_id
+  web_sg_id            = module.networking.web_sg_id
+  lb_sg_id             = module.networking.lb_sg_id
+  public_subnet_ids    = module.networking.public_subnet_ids
+  private_subnet_ids   = module.networking.private_subnet_ids
+  instance_type        = var.instance_type
+  key_pair_name        = var.key_pair_name
+  deployer_public_key  = var.deployer_public_key
+  ecr_repository_name  = var.ecr_repository_name
+  asg_min_size         = var.asg_min_size
+  asg_max_size         = var.asg_max_size
+  asg_desired_capacity = var.asg_desired_capacity
+
+  depends_on = [module.networking]
+}
+
 module "storage" {
   source = "./modules/storage"
 
@@ -35,28 +56,9 @@ module "storage" {
   private_subnet_ids = module.networking.private_subnet_ids
   cache_sg_id        = module.networking.cache_sg_id
   redis_node_type    = var.redis_node_type
-}
+  alb_dns_name       = module.compute.alb_dns_name
 
-module "compute" {
-  source = "./modules/compute"
-
-  title               = var.title
-  region              = var.region
-  vpc_id              = module.networking.vpc_id
-  web_sg_id           = module.networking.web_sg_id
-  lb_sg_id            = module.networking.lb_sg_id
-  public_subnet_ids   = module.networking.public_subnet_ids
-  private_subnet_ids  = module.networking.private_subnet_ids
-  instance_type       = var.instance_type
-  key_pair_name       = var.key_pair_name
-  deployer_public_key = var.deployer_public_key
-  ecr_repository_name = var.ecr_repository_name
-  asg_min_size        = var.asg_min_size
-  asg_max_size        = var.asg_max_size
-  asg_desired_capacity = var.asg_desired_capacity
-  cloudfront_domain   = module.storage.cloudfront_domain_name
-
-  depends_on = [module.networking, module.storage]
+  depends_on = [module.networking, module.compute]
 }
 
 module "monitoring" {
