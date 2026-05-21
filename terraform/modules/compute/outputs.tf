@@ -1,0 +1,49 @@
+output "alb_dns_name" {
+  description = "DNS name of the Application Load Balancer"
+  value       = aws_lb.main.dns_name
+}
+
+output "alb_arn" {
+  description = "ARN of the Application Load Balancer"
+  value       = aws_lb.main.arn
+}
+
+output "alb_arn_suffix" {
+  description = "ARN suffix of the ALB (used for CloudWatch metrics)"
+  value       = aws_lb.main.arn_suffix
+}
+
+output "target_group_arn" {
+  description = "ARN of the backend target group"
+  value       = aws_lb_target_group.backend.arn
+}
+
+output "target_group_arn_suffix" {
+  description = "ARN suffix of the target group (used for CloudWatch metrics)"
+  value       = aws_lb_target_group.backend.arn_suffix
+}
+
+output "asg_name" {
+  description = "Name of the Auto Scaling Group"
+  value       = aws_autoscaling_group.backend.name
+}
+
+output "ecr_repository_url" {
+  description = "URL of the ECR repository"
+  value       = aws_ecr_repository.backend.repository_url
+}
+
+output "ecr_repository_name" {
+  description = "Name of the ECR repository"
+  value       = aws_ecr_repository.backend.name
+}
+
+output "scale_out_policy_arn" {
+  description = "ARN of the scale-out autoscaling policy"
+  value       = aws_autoscaling_policy.scale_out.arn
+}
+
+output "scale_in_policy_arn" {
+  description = "ARN of the scale-in autoscaling policy"
+  value       = aws_autoscaling_policy.scale_in.arn
+}

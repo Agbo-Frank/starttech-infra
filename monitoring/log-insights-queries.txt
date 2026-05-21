@@ -1,0 +1,56 @@
+# StartTech CloudWatch Logs Insights – Saved Queries
+# Log group: /starttech/backend/application
+# Use these in the CloudWatch Console → Logs Insights
+
+# -------------------------------------------------------------------
+# 1. Top errors in the last hour (grouped by 5-minute window)
+# -------------------------------------------------------------------
+fields @timestamp, @message
+| filter @message like /ERROR/
+| stats count(*) as error_count by bin(5m)
+| sort error_count desc
+
+# -------------------------------------------------------------------
+# 2. Request latency distribution (average and p99 per minute)
+#    Assumes JSON log lines with a "latency" field (in ms)
+# -------------------------------------------------------------------
+fields @timestamp, @message
+| parse @message '"latency":*,' as latency_ms
+| stats avg(latency_ms) as avg_latency_ms,
+        pct(latency_ms, 99) as p99_latency_ms
+  by bin(1m)
+
+# -------------------------------------------------------------------
+# 3. Failed authentication attempts (HTTP 401 responses, per 5 minutes)
+# -------------------------------------------------------------------
+fields @timestamp, @message
+| filter @message like /401/
+| stats count(*) as auth_failures by bin(5m)
+| sort auth_failures desc
+
+# -------------------------------------------------------------------
+# 4. Error rate by endpoint (last 1 hour)
+# -------------------------------------------------------------------
+fields @timestamp, @message
+| parse @message '"method":"*","path":"*","status":*' as method, path, status
+| filter status >= 500
+| stats count(*) as server_errors by path, method
+| sort server_errors desc
+| limit 20
+
+# -------------------------------------------------------------------
+# 5. Slow requests (latency > 1000ms)
+# -------------------------------------------------------------------
+fields @timestamp, @message
+| parse @message '"latency":*,' as latency_ms
+| filter latency_ms > 1000
+| sort latency_ms desc
+| limit 50
+
+# -------------------------------------------------------------------
+# 6. Unique active users in the last 24 hours
+# -------------------------------------------------------------------
+fields @timestamp, @message
+| parse @message '"user_id":"*"' as user_id
+| filter ispresent(user_id)
+| stats count_distinct(user_id) as unique_users by bin(1h)

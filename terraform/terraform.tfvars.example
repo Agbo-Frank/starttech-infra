@@ -1,0 +1,14 @@
+# Copy this file to terraform.tfvars and fill in your values.
+# Never commit terraform.tfvars — it contains sensitive data.
+
+region              = "us-east-1"
+title               = "starttech"
+instance_type       = "t3.micro"
+key_pair_name       = "starttech-deployer"
+deployer_public_key = "ssh-rsa AAAA...your-public-key-here"
+ecr_repository_name = "starttech-backend"
+redis_node_type     = "cache.t3.micro"
+asg_min_size        = 1
+asg_max_size        = 3
+asg_desired_capacity = 2
+alert_email         = "alerts@example.com"

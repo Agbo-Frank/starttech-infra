@@ -1,0 +1,47 @@
+{
+  "comment": "Reference definitions for CloudWatch alarms. These are provisioned by Terraform (modules/monitoring/main.tf). This file is for documentation and review purposes.",
+  "alarms": [
+    {
+      "name": "starttech-alb-5xx-errors",
+      "description": "Fires when ALB returns 10+ 5XX errors within a 5-minute window",
+      "metric": "HTTPCode_ELB_5XX_Count",
+      "namespace": "AWS/ApplicationELB",
+      "dimension": "LoadBalancer",
+      "threshold": 10,
+      "period_seconds": 300,
+      "evaluation_periods": 1,
+      "statistic": "Sum",
+      "comparison_operator": "GreaterThanOrEqualToThreshold",
+      "treat_missing_data": "notBreaching",
+      "action": "SNS alert to starttech-alerts topic"
+    },
+    {
+      "name": "starttech-backend-cpu-high",
+      "description": "Fires when average CPU utilization of the ASG exceeds 80% for two consecutive 5-minute periods. Triggers scale-out policy.",
+      "metric": "CPUUtilization",
+      "namespace": "AWS/EC2",
+      "dimension": "AutoScalingGroupName",
+      "threshold": 80,
+      "period_seconds": 300,
+      "evaluation_periods": 2,
+      "statistic": "Average",
+      "comparison_operator": "GreaterThanOrEqualToThreshold",
+      "treat_missing_data": "notBreaching",
+      "action": "Trigger ASG scale-out policy + SNS alert"
+    },
+    {
+      "name": "starttech-alb-target-response-time",
+      "description": "Fires when p99 target response time exceeds 2 seconds for three consecutive 5-minute periods",
+      "metric": "TargetResponseTime",
+      "namespace": "AWS/ApplicationELB",
+      "dimensions": ["LoadBalancer", "TargetGroup"],
+      "threshold": 2.0,
+      "period_seconds": 300,
+      "evaluation_periods": 3,
+      "extended_statistic": "p99",
+      "comparison_operator": "GreaterThanOrEqualToThreshold",
+      "treat_missing_data": "notBreaching",
+      "action": "SNS alert to starttech-alerts topic"
+    }
+  ]
+}
